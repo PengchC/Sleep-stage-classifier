@@ -18,12 +18,19 @@ class HeartRateFeatureService(object):
 
     @staticmethod
     def get_path(subject_id):
-        return Constants.FEATURE_FILE_PATH.joinpath(subject_id + '_hr_feature.out')
+        path = Constants.FEATURE_FILE_PATH.joinpath(subject_id + '_hr_feature.out')
+        norm_path = Constants.FEATURE_FILE_PATH.joinpath(subject_id + '_hr_feature_norm.out')
+        return path, norm_path
 
     @staticmethod
     def write(subject_id, feature):
-        heart_rate_feature_path = HeartRateFeatureService.get_path(subject_id)
+        heart_rate_feature_path,_ = HeartRateFeatureService.get_path(subject_id)
         np.savetxt(heart_rate_feature_path, feature, fmt='%f')
+
+    @staticmethod
+    def write_norm(subject_id, feature):
+        _, heart_rate_feature_norm_path = HeartRateFeatureService.get_path(subject_id)
+        np.savetxt(heart_rate_feature_norm_path, feature, fmt='%f')
 
     @staticmethod
     def build(subject_id, valid_epochs):
@@ -33,19 +40,23 @@ class HeartRateFeatureService(object):
     @staticmethod
     def build_from_collection(heart_rate_collection, valid_epochs):
         heart_rate_features = []
+        heart_rate_features_norm = []
 
-        interpolated_timestamps, interpolated_hr = HeartRateFeatureService.interpolate_and_normalize(
+        interpolated_timestamps, interpolated_hr_norm, interpolated_hr = HeartRateFeatureService.interpolate_and_normalize(
             heart_rate_collection)
 
         for epoch in valid_epochs:
             indices_in_range = HeartRateFeatureService.get_window(interpolated_timestamps, epoch)
-            heart_rate_values_in_range = interpolated_hr[indices_in_range]
+            hert_rate_values_in_range = interpolated_hr[indices_in_range]
+            heart_rate_values_in_range_norm = interpolated_hr_norm[indices_in_range]
 
-            feature = HeartRateFeatureService.get_feature(heart_rate_values_in_range)
-
+            feature =[np.mean(hert_rate_values_in_range)]
+            feature_norm = HeartRateFeatureService.get_feature(heart_rate_values_in_range_norm)
+            
             heart_rate_features.append(feature)
+            heart_rate_features_norm.append(feature_norm)
 
-        return np.array(heart_rate_features)
+        return np.array(heart_rate_features_norm), np.array(heart_rate_features)
 
     @staticmethod
     def get_window(timestamps, epoch):
@@ -68,9 +79,11 @@ class HeartRateFeatureService(object):
                                             np.amax(timestamps), 1)
         interpolated_hr = np.interp(interpolated_timestamps, timestamps, heart_rate_values)
 
-        interpolated_hr = utils.convolve_with_dog(interpolated_hr, HeartRateFeatureService.WINDOW_SIZE)
+        interpolated_hr_norm = utils.convolve_with_dog(interpolated_hr, HeartRateFeatureService.WINDOW_SIZE)
 
-        scalar = np.percentile(np.abs(interpolated_hr), 90)
-        interpolated_hr = interpolated_hr / scalar
+        scalar = np.percentile(np.abs(interpolated_hr_norm), 90)
 
-        return interpolated_timestamps, interpolated_hr
+        interpolated_hr_norm = interpolated_hr_norm / scalar
+
+
+        return interpolated_timestamps, interpolated_hr_norm, interpolated_hr

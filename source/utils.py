@@ -11,39 +11,12 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 
-from source.analysis.setup.attributed_classifier import AttributedClassifier
-from source.analysis.setup.feature_type import FeatureType
+#from sleep_classifiers.source.analysis.setup.attributed_classifier import AttributedClassifier
+#from sleep_classifiers.source.analysis.setup.feature_type import FeatureType
 
 
 def get_project_root() -> Path:
     return Path(__file__).parent.parent
-
-
-def get_classifiers():
-    return [AttributedClassifier(name='Random Forest',
-                                 classifier=RandomForestClassifier(n_estimators=100, max_features=1.0,
-                                                                   max_depth=10,
-                                                                   min_samples_split=10, min_samples_leaf=32,
-                                                                   bootstrap=True)),
-            AttributedClassifier(name='Logistic Regression',
-                                 classifier=LogisticRegression(penalty='l1', solver='liblinear', verbose=0,
-                                                               multi_class='auto')),
-            AttributedClassifier(name='k-Nearest Neighbors',
-                                 classifier=KNeighborsClassifier(weights='distance')),
-            AttributedClassifier(name='Neural Net',
-                                 classifier=MLPClassifier(activation='relu', hidden_layer_sizes=(15, 15, 15),
-                                                          max_iter=2000, alpha=0.01, solver='adam', verbose=False,
-                                                          n_iter_no_change=20))]
-
-
-def get_base_feature_sets():
-    return [[FeatureType.count],
-            [FeatureType.heart_rate],
-            [FeatureType.count, FeatureType.heart_rate],
-            [FeatureType.count, FeatureType.heart_rate, FeatureType.cosine]]
-    # 12-23-19 note: I'm making the default base feature use cosine, not circadian model
-    # so that it doesn't require MATLAB to run
-
 
 def convert_pdf_to_txt(pdf_path_string, all_texts):
     resource_manager = PDFResourceManager()

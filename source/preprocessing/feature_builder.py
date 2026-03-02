@@ -29,16 +29,13 @@ class FeatureBuilder(object):
     def build_from_wearables(subject_id, valid_epochs):
 
         count_feature = ActivityCountFeatureService.build(subject_id, valid_epochs)
-        heart_rate_feature = HeartRateFeatureService.build(subject_id, valid_epochs)
+        heart_rate_feature_norm, heart_rate_feature = HeartRateFeatureService.build(subject_id, valid_epochs)
         ActivityCountFeatureService.write(subject_id, count_feature)
         HeartRateFeatureService.write(subject_id, heart_rate_feature)
+        HeartRateFeatureService.write_norm(subject_id, heart_rate_feature_norm)
 
     @staticmethod
     def build_from_time(subject_id, valid_epochs):
-
-        if Constants.INCLUDE_CIRCADIAN:
-            circadian_feature = TimeBasedFeatureService.build_circadian_model(subject_id, valid_epochs)
-            TimeBasedFeatureService.write_circadian_model(subject_id, circadian_feature)
 
         cosine_feature = TimeBasedFeatureService.build_cosine(valid_epochs)
         time_feature = TimeBasedFeatureService.build_time(valid_epochs)
