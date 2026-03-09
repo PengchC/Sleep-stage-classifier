@@ -1,60 +1,102 @@
-# sleep_classifiers
+# Sleep Stage Classifier
 
-This code uses scikit-learn to classify sleep based on acceleration and photoplethymography-derived heart rate from the Apple Watch. The paper associated with the work is available [here](https://academic.oup.com/sleep/article/42/12/zsz180/5549536).
+Machine learning workflow for classifying sleep stages from Apple Watch sensor data (motion and heart rate).
 
-## Basics
+## What Is In This Repository
 
-This code has been updated for Python 3.9. The original version of the code used Python 3.7. You can get the source code to generate the figures in the paper here, but you'll need to pull the data from [here](https://alpha.physionet.org/content/sleep-accel/1.0.0/) and add it to the `data` folder to run the pre-processing step. 
+- `source/preprocessing/`: Raw data processing and feature generation pipeline.
+- `source/`: Shared utilities, constants, and sleep stage definitions.
+- `data/`: Input folders for raw files (`heart_rate`, `labels`, `motion`, `steps`).
+- `outputs/features/`: Generated feature files used for downstream modeling.
+- `Digital_health_project.ipynb`: End-to-end notebook for preprocessing, modeling, and evaluation.
+- `Project_report.pdf`: Complete project report.
 
-### Data
+## Data
 
-- Data collected using the Apple Watch is available on PhysioNet: [link](https://alpha.physionet.org/content/sleep-accel/1.0.0/)
+Apple Watch data is available from PhysioNet:
+- https://alpha.physionet.org/content/sleep-accel/1.0.0/
 
-## Pre-processing the data
+If your `data/` folder is empty, place downloaded files into these subfolders:
+- `data/heart_rate/` (for `*_heartrate.txt`)
+- `data/labels/` (for `*_labeled_sleep.txt`)
+- `data/motion/` (for `*_acceleration.txt`)
+- `data/steps/` (for `*_steps.txt`, if used by your workflow)
 
-To convert the raw data into features that can be interpreted by the classifiers, you want to run `preprocessing_runner.py.` This script is located in the `source/preprocessing` directory. Here are the steps you need to follow to run that code: 
+## Environment Setup
 
-1. Download the [data](https://alpha.physionet.org/content/sleep-accel/1.0.0/).
-2. Paste the `heart_rate`, `labels`, and `motion` folders into the `data` directory in this repository, overwriting the empty folders 
-3. Run `preprocessing_runner.py`. This will take in the raw data for each subject, and use it to generate features to be read in by the classifier. The saved features will get saved to the folder `outputs/features/`, with the filename corresponding to the type of feature. For instance, the activity count feature for subject 781756 will appear as `781756_count_feature.out`. 
+Use Python 3.12+.
 
-#### Notes
-- Generating all the features should take about five minutes
-- The features are text files, and if you want to see what they contain, simply open them in a text editor. 
-- You should see print statements that look like this: `Cropping data from subject 8692923...`
-- Followed by print statements that look like this: `Getting valid epochs... Building features...`
- 
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+```
 
+## Features
 
-## Making the figures.
+### Data Preprocessing
+- Handling missing values
+- Feature scaling and encoding
+- Dimensionality reduction with PCA
+- Outlier detection and management
+- Feature engineering
 
-The file `analysis_runner.py` can be used to generate figures showing classifier performance. This script is located in the `source/analysis` directory. You can comment and uncomment the call list of functions at the bottom of the script to only produce the figures you want to run. 
+### Machine Learning Models
+- Logistic Regression
+- Random Forest 
+- Gradient Boosting 
+- K-Nearest Neighbors 
+- Support Vector Machine
 
-The figure will be saved in the folder `outputs/figures` as .png files. 
+### Model Evaluation
+- Accuracy, Precision, Recall, and F1-score
+- Confusion Matrix
+- Multi-class ROC curves and AUC
+- Classification Reports
 
-The list of available analysis functions are as follows: 
-- `figure_leave_one_out_roc_and_pr()`: Makes PR and ROC curves for the Apple Watch data  by training on all but one subject, and testing on the holdout subject
-- `figures_mc_sleep_wake()`: Makes PR and ROC curves for the Apple Watch data  by training on a random subset of subjects, testing on the holdout subjects, and then repeating this process many times.
-- `figures_mc_three_class()`: Trains on a random subset of Apple Watch subjects, tests on the remaining holdouts, and generates the "three-class" ROC described in the paper
-- `figures_leave_one_out_sleep_wake_performance()`: For Apple Watch subjects, trains on everybody but one subject, tests on that holdout subject, and then generates Bland-Altman plots for sleep and wake metrics.
-- `figures_leave_one_out_three_class_performance()`:  For Apple Watch subjects, trains on everybody but one subject, tests on that holdout subject, and then generates Bland-Altman plots for wake, REM, NREM metrics.
+### Model Selection
+- Comparison of 11 model variants
+- Performance visualization across metrics
 
-- `figures_mesa_sleep_wake()`: For MESA data, generates ROC/PR curves for sleep-wake 
-- `figures_mesa_three_class()`: For MESA data, generates wake/NREM/REM analysis
+### Model Interpretability
+- Feature importance analysis (Random Forest)
+- SHAP values for model explanation
+- SHAP summary and dependence plots
 
-- `figures_compare_time_based_features()`: Comparison of time-based features for Apple Watch data; requires MATLAB to run. 
+## Notebook Workflow
 
+Open and run `Digital_health_project.ipynb` for a full analysis pipeline:
+- loading raw data
+- running preprocessing (`run_preprocessing(subject_ids)`)
+- feature engineering
+- data visualization
+- model training/evaluation and testing
+- results analysis and explainability analysis
 
-
-#### Notes
-- This code will not execute if you haven't run `preprocessing_runner.py` to generate the features first. 
-- These figures can take a _long_ time to run. 
-
-## General notes
-- In the blue motion-only classifier performance lines in Figures 4 and 8 in [the paper](https://academic.oup.com/sleep/article/42/12/zsz180/5549536), labels for REM and NREM sleep are switched. NREM sleep is the dashed line and REM is the dotted line.
-- The subset of the MESA dataset used for comparison in the paper are the first 188 subjects with valid data, in order of increasing Subject ID.
-- Enough people didn't have MATLAB that I've made the circadian feature (which uses MATLAB) not included by default. Instead, the default circadian-like feature is a cosine waveform. You can re-add the circadian feature by setting `INCLUDE_CIRCADIAN = True`, though this requires MATLAB. 
+Note:
+- Preprocessing can take several minutes depending on machine speed.
 
 ## License
 
-This software is open source and under an MIT license.
+This project is licensed under the MIT License - see the [`LICENSE`](LICENSE) file for details.
+
+## Reference
+
+```text
+Walch, O., Widmer, Y., Koscec, L., et al. (2019).
+Sleep Stage Classification Using Delayed Movement Detection from a Wearable Device.
+Sleep, 42(12), zsz180.
+https://doi.org/10.1093/sleep/zsz180
+```
+
+## Author 
+<div align="center">
+  
+<!-- Team Members -->
+<p>
+  <a href="https://www.linkedin.com/in/pengcheng-chen-153612317/">
+    <img src="https://img.shields.io/badge/Pengcheng_Chen-LinkedIn-%2300a0dc?style=for-the-badge&logo=linkedin&logoColor=white" alt="Pengcheng Chen"/>
+  </a>
+</p>
+
+</div>
